@@ -6,6 +6,10 @@ const fsp= fs.promises;
 const superagent = require("superagent");
 const express = require('express')
 const multer = require('multer');
+const swaggerUi = require("swagger-ui-express");
+const yaml = require("yamljs");
+
+const swaggerDocument = yaml.load(path.join(__dirname,"inventory.yaml"));
 
 program 
 
@@ -61,13 +65,16 @@ const cachePath = path.resolve(options.cache);
 });
 let inventory = [];
 const upload = multer({ storage: storage });
-
+app.get('/',(req,res)=>{
+    res.send('Entry endpoints');
+});
 app.get('/RegisterForm.html', (req,res)=>{
     res.sendFile(path.join(__dirname,'RegisterForm.html'));
 });
 app.get('/SearchForm.html', (req,res)=>{
     res.sendFile(path.join(__dirname,'SearchForm.html'));
 });
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.post('/register', upload.single('photo'), (req,res)=>{
     const {inventory_name,description}=req.body;
@@ -88,7 +95,7 @@ app.get('/inventory', (req,res)=>{
 
 const result = inventory.map(item => ({
     ...item,
-    photoUrl: item.photo ? `http://${host}:${port}/inventory/${item.id}/photo` : null
+    photoUrl: item.photo ? `http://localhost:${port}/inventory/${item.id}/photo` : null
 }));
 res.status(200).json(result);
 });
@@ -98,7 +105,7 @@ const item = inventory.find(i => i.id === req.params.id);
  if (!item) return res.status(404).send('Not Found');
  const result = {
     ...item,
-    photoUrl: item.photo ? `http://${host}:${port}/inventory/${item.id}/photo` : null
+    photoUrl: item.photo ? `http://localhost:${port}/inventory/${item.id}/photo` : null
  };
  res.status(200).json(result);
 });
@@ -147,7 +154,7 @@ app.post('/search',(req,res)=>{
     if (!item) return res.status(404).send('Not Found');
     let responseItem = { ...item };
     if (has_photo) {
-        const link = item.photo ? `http://${host}:${port}/inventory/${item.id}/photo` : 'No photo';
+        const link = item.photo ? `http://localhost:${port}/inventory/${item.id}/photo` : 'No photo';
         responseItem.description = `${responseItem.description} (Photo link: ${link})`;
     }
     res.status(200).json(responseItem);
@@ -157,6 +164,13 @@ app.use((req,res)=>{
 });
 const server = http.createServer(app);
 server.listen(port, host, () => {
-    console.log(`Сервер успішно запущено на http://${host}:${port}`);
+    console.log(`Сервер успішно запущено на http://localhost:${port}`);
     
 });
+
+
+
+
+
+
+
